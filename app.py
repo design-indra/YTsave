@@ -116,13 +116,44 @@ def index():
                 error = "Gagal memproses video. Pastikan link benar dan coba lagi."
     return render_template("index.html", result=result, error=error)
 
-# Redirect langsung ke URL — hindari timeout Vercel
 @app.route("/download")
 def download():
     video_url = request.args.get("url")
+    dl_type = request.args.get("type", "video")
     if not video_url:
         return "URL tidak valid", 400
-    return redirect(video_url)
+    try:
+        r = requests.get(
+            video_url,
+            headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "Referer": "https://www.youtube.com/",
+                "Origin": "https://www.youtube.com",
+                "Accept": "*/*",
+                "Accept-Encoding": "identity",
+                "Range": "bytes=0-"
+            },
+            stream=True,
+            timeout=25
+        )
+        ext = "mp3" if dl_type == "mp3" else "mp4"
+        content_type = "audio/mpeg" if dl_type == "mp3" else "video/mp4"
+        filename = f"YTSave_{int(time.time())}.{ext}"
+
+        def generate():
+            for chunk in r.iter_content(chunk_size=65536):
+                if chunk:
+                    yield chunk
+
+        return Response(generate(), headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Content-Type": content_type,
+            "Cache-Control": "no-cache",
+        })
+    except Exception as e:
+        print(f"Download error: {e}")
+        return redirect(video_url)
+
 
 @app.route("/contact")
 def contact():
