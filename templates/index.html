@@ -1,1 +1,267 @@
-templates
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YTSave - Download Video & MP3 YouTube Gratis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #ffffff; scroll-behavior: smooth; }
+        .hero-section { background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%); padding: 60px 20px; text-align: center; color: white; }
+        .input-box { max-width: 700px; margin: -40px auto 0; background: white; padding: 10px; border-radius: 50px; box-shadow: 0 15px 30px rgba(0,0,0,0.1); display: flex; align-items: center; }
+        .input-box input { flex: 1; border: none; outline: none; padding: 15px 25px; border-radius: 50px; font-size: 16px; color: #333; }
+        .btn-download { background: #ff0000; color: white; font-weight: 700; padding: 15px 40px; border-radius: 50px; transition: 0.3s; border: none; cursor: pointer; }
+        .btn-download:hover { background: #cc0000; transform: scale(1.02); }
+        .tab-btn { padding: 10px 24px; border-radius: 50px; font-weight: 700; font-size: 14px; cursor: pointer; transition: 0.2s; border: 2px solid #ff0000; }
+        .tab-btn.active { background: #ff0000; color: white; }
+        .tab-btn:not(.active) { background: white; color: #ff0000; }
+        #ad-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 999; align-items: center; justify-content: center; padding: 20px; }
+        .ad-content { background: white; width: 100%; max-width: 350px; border-radius: 24px; padding: 20px; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <div id="ad-overlay">
+        <div class="ad-content">
+            <p class="text-[10px] text-gray-400 mb-3 uppercase tracking-widest font-bold">Iklan Sponsor</p>
+            <div class="min-h-[250px] bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 text-sm">
+                Area Iklan
+            </div>
+            <button id="close-ad" disabled class="w-full mt-4 bg-gray-200 text-gray-500 font-bold py-3 rounded-xl transition">Tutup (5s)</button>
+        </div>
+    </div>
+
+    <nav class="py-4 px-6 flex justify-between items-center border-b">
+        <div class="text-2xl font-black text-red-600">YTSave</div>
+        <span class="text-xs font-bold text-gray-400 uppercase tracking-widest hidden sm:inline">YouTube Downloader</span>
+    </nav>
+
+    <section class="hero-section">
+        <h1 class="text-3xl md:text-5xl font-extrabold mb-4 tracking-tight">YouTube Downloader</h1>
+        <p class="text-red-100 text-lg">Download Video MP4 & Convert ke MP3 secara gratis</p>
+    </section>
+
+    <div class="px-4 mt-0">
+        <form id="download-form" method="POST" action="/" class="input-box">
+            <input type="url" name="url" placeholder="Tempel link YouTube di sini..." required value="{{ request.form.get('url', '') }}">
+            <button type="submit" class="btn-download hidden md:block text-sm uppercase">Proses</button>
+        </form>
+        <button type="submit" form="download-form" class="w-full mt-4 btn-download md:hidden py-4 rounded-xl">PROSES</button>
+    </div>
+
+    {% if error %}
+    <div class="max-w-2xl mx-auto mt-6 px-4">
+        <div class="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-2xl flex items-center gap-3">
+            <i class="fa-solid fa-circle-exclamation text-red-500 text-xl"></i>
+            <p class="font-bold italic">{{ error }}</p>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if result %}
+    <section id="download-result" class="max-w-4xl mx-auto px-4 py-10">
+        <div class="bg-white p-8 rounded-[2rem] border-2 border-red-50 shadow-xl">
+
+            <!-- Video Info -->
+            <div class="flex flex-col md:flex-row gap-6 items-start mb-8">
+                {% if result.thumbnail %}
+                <img src="{{ result.thumbnail }}" class="w-full md:w-64 rounded-2xl shadow-lg object-cover" alt="Thumbnail">
+                {% endif %}
+                <div class="flex-1">
+                    <h3 class="text-xl font-extrabold text-gray-900 mb-2">{{ result.title }}</h3>
+                    {% if result.duration %}
+                    <p class="text-sm text-gray-500"><i class="fa-solid fa-clock mr-1"></i> {{ result.duration }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Tab Pilihan -->
+            <div class="flex gap-3 mb-6 flex-wrap">
+                <button class="tab-btn active" onclick="switchTab('video')">
+                    <i class="fa-solid fa-video mr-1"></i> Download Video (MP4)
+                </button>
+                <button class="tab-btn" onclick="switchTab('mp3')">
+                    <i class="fa-solid fa-music mr-1"></i> Convert ke MP3
+                </button>
+                {% if result.thumbnail %}
+                <button class="tab-btn" onclick="switchTab('thumb')">
+                    <i class="fa-solid fa-image mr-1"></i> Download Thumbnail
+                </button>
+                {% endif %}
+            </div>
+
+            <!-- Tab Video MP4 -->
+            <div id="tab-video" class="tab-content space-y-3">
+                {% if result.qualities %}
+                    {% for q in result.qualities %}
+                    <button onclick="startAdProcess('{{ q.url }}', 'video')"
+                        class="w-full bg-red-600 hover:bg-red-700 text-white py-4 rounded-2xl font-black text-lg transition shadow-lg shadow-red-100 flex items-center justify-center gap-3">
+                        <i class="fa-solid fa-cloud-arrow-down"></i> Download {{ q.quality }} (MP4)
+                    </button>
+                    {% endfor %}
+                {% else %}
+                <button onclick="startAdProcess('{{ result.video }}', 'video')"
+                    class="w-full bg-red-600 hover:bg-red-700 text-white py-4 rounded-2xl font-black text-lg transition shadow-lg shadow-red-100 flex items-center justify-center gap-3">
+                    <i class="fa-solid fa-cloud-arrow-down"></i> Download Video (MP4)
+                </button>
+                {% endif %}
+            </div>
+
+            <!-- Tab MP3 -->
+            <div id="tab-mp3" class="tab-content hidden space-y-3">
+                {% if result.audio %}
+                <button onclick="startAdProcess('{{ result.audio }}', 'mp3')"
+                    class="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl font-black text-lg transition shadow-lg shadow-green-100 flex items-center justify-center gap-3">
+                    <i class="fa-solid fa-music"></i> Download MP3 (Audio)
+                </button>
+                {% else %}
+                <p class="text-center text-gray-400 py-4">Audio tidak tersedia untuk video ini.</p>
+                {% endif %}
+            </div>
+
+            <!-- Tab Thumbnail -->
+            <div id="tab-thumb" class="tab-content hidden space-y-3">
+                {% if result.thumbnail %}
+                <a href="{{ result.thumbnail }}" download target="_blank"
+                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-2xl font-black text-lg transition shadow-lg shadow-indigo-100 flex items-center justify-center gap-3">
+                    <i class="fa-solid fa-image"></i> Download Thumbnail
+                </a>
+                {% endif %}
+            </div>
+
+            <button onclick="location.href='/'" class="mt-6 text-red-500 font-bold text-sm hover:underline italic block text-center">← Download video lain</button>
+        </div>
+    </section>
+    {% endif %}
+
+    <article class="max-w-4xl mx-auto px-6 py-20">
+
+        <div class="text-center mb-16">
+            <h2 class="text-3xl font-black text-gray-900 mb-4">Apa itu YTSave?</h2>
+            <p class="text-gray-600 leading-relaxed max-w-2xl mx-auto">
+                YTSave adalah tools gratis untuk download video YouTube dalam kualitas HD dan mengkonversi video YouTube menjadi file MP3. Tanpa aplikasi, tanpa login, langsung dari browser kamu.
+            </p>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-12 items-start mb-20">
+            <div>
+                <h2 class="text-3xl font-black text-gray-900 mb-6">Cara Download Video YouTube?</h2>
+                <ul class="space-y-4">
+                    <li class="flex gap-4">
+                        <span class="bg-red-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold shrink-0">1</span>
+                        <p class="text-gray-600"><strong>Salin Link:</strong> Buka YouTube dan pilih video yang ingin diunduh. Salin link dari address bar atau tombol Share.</p>
+                    </li>
+                    <li class="flex gap-4">
+                        <span class="bg-red-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold shrink-0">2</span>
+                        <p class="text-gray-600"><strong>Tempel Link:</strong> Kembali ke YTSave, tempelkan link ke kolom input di atas halaman ini lalu klik Proses.</p>
+                    </li>
+                    <li class="flex gap-4">
+                        <span class="bg-red-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold shrink-0">3</span>
+                        <p class="text-gray-600"><strong>Pilih Format:</strong> Pilih download MP4 (video) atau MP3 (audio) sesuai kebutuhan kamu, lalu simpan.</p>
+                    </li>
+                </ul>
+            </div>
+            <div class="bg-red-50 p-8 rounded-[2rem] border border-red-100">
+                <h4 class="font-black text-red-900 text-xl mb-4">Fitur Utama YTSave:</h4>
+                <ul class="space-y-3 text-gray-700">
+                    <li><i class="fa-solid fa-check text-green-500 mr-2"></i> Download Video HD (360p/720p/1080p)</li>
+                    <li><i class="fa-solid fa-check text-green-500 mr-2"></i> Convert Video ke MP3</li>
+                    <li><i class="fa-solid fa-check text-green-500 mr-2"></i> Download Thumbnail YouTube</li>
+                    <li><i class="fa-solid fa-check text-green-500 mr-2"></i> Gratis tanpa batas unduhan.</li>
+                    <li><i class="fa-solid fa-check text-green-500 mr-2"></i> Tidak perlu login/daftar.</li>
+                    <li><i class="fa-solid fa-check text-green-500 mr-2"></i> Mendukung HP Android, iOS, & PC.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="border-t pt-16">
+            <h2 class="text-center text-3xl font-black text-gray-900 mb-12">Mengapa Memilih Kami?</h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="text-center p-6">
+                    <div class="text-red-600 text-4xl mb-4"><i class="fa-solid fa-bolt-lightning"></i></div>
+                    <h5 class="font-bold text-lg mb-2">Kecepatan Tinggi</h5>
+                    <p class="text-sm text-gray-500 font-medium">Server kami memproses video YouTube secara instan tanpa menunggu lama.</p>
+                </div>
+                <div class="text-center p-6">
+                    <div class="text-red-600 text-4xl mb-4"><i class="fa-solid fa-music"></i></div>
+                    <h5 class="font-bold text-lg mb-2">MP3 Berkualitas</h5>
+                    <p class="text-sm text-gray-500 font-medium">Konversi audio dengan kualitas terbaik langsung dari video YouTube.</p>
+                </div>
+                <div class="text-center p-6">
+                    <div class="text-red-600 text-4xl mb-4"><i class="fa-solid fa-mobile-screen-button"></i></div>
+                    <h5 class="font-bold text-lg mb-2">User Friendly</h5>
+                    <p class="text-sm text-gray-500 font-medium">Tampilan yang bersih dan mudah digunakan oleh siapa saja, di mana saja.</p>
+                </div>
+            </div>
+        </div>
+    </article>
+
+    <footer class="bg-gray-900 py-12 text-center text-white">
+        <div class="max-w-4xl mx-auto px-6">
+            <div class="text-2xl font-black mb-4">YTSave - YouTube Downloader</div>
+            <p class="text-gray-400 text-sm mb-6 uppercase tracking-widest">Download Video & MP3 YouTube Gratis</p>
+            <div class="flex justify-center gap-8 border-t border-gray-800 pt-8">
+                <a href="/privacy" class="text-xs font-bold hover:text-red-400 uppercase">Privacy Policy</a>
+                <a href="/contact" class="text-xs font-bold hover:text-red-400 uppercase text-gray-400">Contact</a>
+            </div>
+            <p class="text-gray-600 text-xs mt-4">© 2026 YTSave All right reserved</p>
+        </div>
+    </footer>
+
+    <script>
+        let videoUrl = "";
+        let downloadType = "video";
+
+        window.onload = function() {
+            {% if result %}
+                const resultSection = document.getElementById('download-result');
+                if (resultSection) {
+                    resultSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            {% endif %}
+        };
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.remove('hidden');
+            event.target.classList.add('active');
+        }
+
+        function startAdProcess(url, type) {
+            videoUrl = url;
+            downloadType = type;
+            document.getElementById('ad-overlay').style.display = 'flex';
+            let c = 5;
+            const t = setInterval(() => {
+                c--;
+                const closeBtn = document.getElementById('close-ad');
+                closeBtn.innerText = `Tutup (${c}s)`;
+                if (c <= 0) {
+                    clearInterval(t);
+                    closeBtn.innerText = "SIMPAN SEKARANG";
+                    closeBtn.disabled = false;
+                    closeBtn.className = "w-full mt-4 bg-red-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-red-200";
+                }
+            }, 1000);
+        }
+
+        document.getElementById('close-ad').onclick = () => {
+            document.getElementById('ad-overlay').style.display = 'none';
+            proxyDownload(videoUrl, downloadType);
+        };
+
+        function proxyDownload(u, type) {
+            const a = document.createElement('a');
+            a.href = '/download?url=' + encodeURIComponent(u) + '&type=' + type;
+            a.download = '';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+    </script>
+</body>
+</html>
+
