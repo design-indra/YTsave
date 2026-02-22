@@ -254,14 +254,9 @@
         };
 
         function proxyDownload(u, type) {
-            const a = document.createElement('a');
-            a.href = '/download?url=' + encodeURIComponent(u) + '&type=' + type;
-            a.download = '';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+            // Buka URL langsung di tab baru agar browser bisa download
+            window.open(u, '_blank');
         }
     </script>
 </body>
 </html>
-
