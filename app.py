@@ -1,7 +1,6 @@
-from flask import Flask, render_template, request, redirect, Response
+from flask import Flask, render_template, request, redirect
 import requests
 import os
-import time
 import re
 
 template_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
@@ -52,7 +51,6 @@ def get_youtube_data(url):
         duration = info.get("lengthSeconds", "")
         thumbnail = f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg"
 
-        # Format durasi
         if duration:
             try:
                 secs = int(duration)
@@ -60,7 +58,7 @@ def get_youtube_data(url):
             except:
                 duration = ""
 
-        # Ambil link download video
+        # Ambil link download
         r2 = requests.get(
             f"https://{RAPIDAPI_HOST}/dl",
             params={"id": video_id, "cgeo": "US"},
@@ -72,10 +70,8 @@ def get_youtube_data(url):
         dl_data = r2.json()
 
         qualities = []
-        video_url = None
         audio_url = None
 
-        # Ambil formats video
         formats = dl_data.get("formats") or dl_data.get("adaptiveFormats") or []
         for fmt in formats:
             mime = fmt.get("mimeType", "")
@@ -86,18 +82,12 @@ def get_youtube_data(url):
             elif "audio" in mime and url_fmt and not audio_url:
                 audio_url = url_fmt
 
-        # Sort kualitas
         order = {"1080p": 0, "720p": 1, "480p": 2, "360p": 3, "240p": 4, "144p": 5}
         qualities.sort(key=lambda x: order.get(x["quality"], 99))
 
-        if qualities:
-            video_url = qualities[0]["url"]
-
-        # Fallback: cek struktur lain
-        if not video_url and dl_data.get("url"):
-            video_url = dl_data["url"]
-        if not audio_url and dl_data.get("audioUrl"):
-            audio_url = dl_data["audioUrl"]
+        video_url = qualities[0]["url"] if qualities else dl_data.get("url")
+        if not audio_url:
+            audio_url = dl_data.get("audioUrl")
 
         return {
             "title": title,
@@ -126,35 +116,13 @@ def index():
                 error = "Gagal memproses video. Pastikan link benar dan coba lagi."
     return render_template("index.html", result=result, error=error)
 
+# Redirect langsung ke URL — hindari timeout Vercel
 @app.route("/download")
 def download():
     video_url = request.args.get("url")
-    dl_type = request.args.get("type", "video")
     if not video_url:
         return "URL tidak valid", 400
-    try:
-        r = requests.get(
-            video_url,
-            headers={"User-Agent": "Mozilla/5.0", "Referer": "https://www.youtube.com/"},
-            stream=True,
-            timeout=30
-        )
-        ext = "mp3" if dl_type == "mp3" else "mp4"
-        content_type = "audio/mpeg" if dl_type == "mp3" else "video/mp4"
-        filename = f"YTSave_{int(time.time())}.{ext}"
-
-        def generate():
-            for chunk in r.iter_content(chunk_size=8192):
-                if chunk:
-                    yield chunk
-
-        return Response(generate(), headers={
-            "Content-Disposition": f'attachment; filename="{filename}"',
-            "Content-Type": content_type,
-        })
-    except Exception as e:
-        print(f"Download error: {e}")
-        return redirect(video_url)
+    return redirect(video_url)
 
 @app.route("/contact")
 def contact():
