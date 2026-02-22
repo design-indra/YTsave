@@ -20,6 +20,10 @@
         #ad-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 999; align-items: center; justify-content: center; padding: 20px; }
         .ad-content { background: white; width: 100%; max-width: 350px; border-radius: 24px; padding: 20px; text-align: center; }
     </style>
+    <!-- Popunder Ad -->
+    <script src="https://pl28767228.effectivegatecpm.com/e8/37/9b/e8379ba18a27a4d7dd8dd4fcb76b4e28.js"></script>
+    <!-- Social Bar Ad -->
+    <script src="https://pl28767221.effectivegatecpm.com/17/17/73/171773e792fe01430a8ce9e931bc46d9.js"></script>
 </head>
 <body>
 
@@ -36,7 +40,40 @@
     <nav class="py-4 px-6 flex justify-between items-center border-b">
         <div class="text-2xl font-black text-red-600">YTSave</div>
         <span class="text-xs font-bold text-gray-400 uppercase tracking-widest hidden sm:inline">YouTube Downloader</span>
-    </nav>
+        <div class="relative">
+        <button onclick="toggleMenu()" class="p-2 rounded-lg hover:bg-gray-100 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+        </button>
+        <div id="dropdown-menu" class="hidden absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 overflow-hidden">
+            <div class="px-4 py-2 text-[10px] text-gray-400 uppercase tracking-widest font-bold border-b">Tools Kami</div>
+            <a href="https://YTSAVE-URL.vercel.app" class="flex items-center gap-3 px-4 py-3 hover:bg-red-50 font-bold text-sm text-red-600 transition">
+                <i class="fa-brands fa-youtube text-lg"></i> YTSave
+            </a>
+            <a href="https://SNAPSAVE-URL.vercel.app" class="flex items-center gap-3 px-4 py-3 hover:bg-indigo-50 font-bold text-sm text-indigo-600 transition">
+                <i class="fa-brands fa-tiktok text-lg"></i> SnapSave
+            </a>
+            <a href="https://INSTASAVE-URL.vercel.app" class="flex items-center gap-3 px-4 py-3 hover:bg-pink-50 font-bold text-sm text-pink-600 transition">
+                <i class="fa-brands fa-instagram text-lg"></i> InstaSave
+            </a>
+        </div>
+    </div>
+</nav>
+
+    <!-- Banner Ad 728x90 -->
+    <div class="flex justify-center items-center py-2 bg-gray-50 border-b overflow-x-hidden">
+        <script>
+          atOptions = {
+            'key' : 'ce4de3b239db7200d9d69752a34d94ed',
+            'format' : 'iframe',
+            'height' : 90,
+            'width' : 728,
+            'params' : {}
+          };
+        </script>
+        <script src="https://www.highperformanceformat.com/ce4de3b239db7200d9d69752a34d94ed/invoke.js"></script>
+    </div>
 
     <section class="hero-section">
         <h1 class="text-3xl md:text-5xl font-extrabold mb-4 tracking-tight">YouTube Downloader</h1>
@@ -198,6 +235,12 @@
         </div>
     </article>
 
+    <!-- Native Banner Ad -->
+    <div class="max-w-4xl mx-auto px-6 pb-10">
+        <script async="async" data-cfasync="false" src="https://pl28767224.effectivegatecpm.com/84baf2967a1046cd5dc730690ab9f7c8/invoke.js"></script>
+        <div id="container-84baf2967a1046cd5dc730690ab9f7c8"></div>
+    </div>
+
     <footer class="bg-gray-900 py-12 text-center text-white">
         <div class="max-w-4xl mx-auto px-6">
             <div class="text-2xl font-black mb-4">YTSave - YouTube Downloader</div>
@@ -261,6 +304,16 @@
             a.click();
             document.body.removeChild(a);
         }
+    
+        function toggleMenu() {
+            const menu = document.getElementById('dropdown-menu');
+            menu.classList.toggle('hidden');
+        }
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.relative')) {
+                document.getElementById('dropdown-menu').classList.add('hidden');
+            }
+        });
     </script>
 </body>
 </html>
